@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LocaleProvider } from "./i18n";
+import { PwaRegistration } from "./components/pwa-registration";
 import { siteName, siteUrl } from "./site";
 
 export const metadata: Metadata = {
@@ -23,8 +24,18 @@ export const metadata: Metadata = {
     title: `${siteName} — Mermaid Diagram Editor`,
     description: "Create Mermaid diagrams and export them as SVG or PNG.",
   },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ko"><body><LocaleProvider>{children}</LocaleProvider></body></html>;
+  return <html lang="ko"><body><LocaleProvider><PwaRegistration />{children}</LocaleProvider></body></html>;
 }

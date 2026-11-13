@@ -7,6 +7,9 @@
     "build": "next build"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "canvg": "^4.0.3",
+    "loglevel": "^1.9.2",
     "mermaid": "^11.12.1",
     "next": "^15.5.3",
     "react": "^19.1.0",

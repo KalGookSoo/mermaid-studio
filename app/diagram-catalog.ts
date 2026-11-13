@@ -93,11 +93,12 @@ export const diagrams: DiagramDefinition[] = [
     code: `gantt
   title Mermaid Studio roadmap
   dateFormat YYYY-MM-DD
+  axisFormat %b %d
   section Build
-  Editor UI       :done, ui, 2026-01-01, 3d
-  Diagram guides  :active, guides, after ui, 5d
+  Editor UI       :done, 2026-01-01, 3d
+  Diagram guides  :active, 2026-01-04, 5d
   section Release
-  Launch          :milestone, launch, after guides, 0d`, docsUrl: "https://mermaid.js.org/syntax/gantt.html",
+  Launch          :milestone, 2026-01-10, 0d`, docsUrl: "https://mermaid.js.org/syntax/gantt.html",
   },
   {
     slug: "pie", name: "파이 차트", shortName: "Pie", description: "전체 대비 항목별 비율을 간단히 비교합니다.", useCase: "분포, 투표, 카테고리 점유율을 빠르게 공유할 때 사용합니다.",
