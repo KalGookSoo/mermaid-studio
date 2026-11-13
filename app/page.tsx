@@ -23,6 +23,7 @@ export default function Home() {
   const [status, setStatus] = useState<Status>("ready");
   const [message, setMessage] = useState("Ready to render");
   const output = useRef<HTMLDivElement>(null);
+  const renderTarget = useRef<HTMLDivElement>(null);
   const svgRef = useRef("");
 
   useEffect(() => {
@@ -30,11 +31,14 @@ export default function Home() {
       setStatus("rendering");
       setMessage("Rendering diagram…");
       try {
+        const target = renderTarget.current;
+        if (!target) return;
+        target.replaceChildren();
         const mermaid = (await import("mermaid")).default;
         mermaid.initialize({ startOnLoad: false, theme: "base", securityLevel: "strict", themeVariables: { primaryColor: "#d6f3ec", primaryTextColor: "#102c26", primaryBorderColor: "#167d6b", lineColor: "#397d70", secondaryColor: "#fff5d9", tertiaryColor: "#f7fbf9", fontFamily: "ui-sans-serif, system-ui, sans-serif" } });
         const id = `mermaid-${Date.now()}`;
-        const renderTarget = document.createElement("div");
-        const { svg } = await mermaid.render(id, source, renderTarget);
+        const { svg } = await mermaid.render(id, source, target);
+        target.replaceChildren();
         if (svg.includes("Syntax error in text")) {
           throw new Error("Syntax error in text");
         }
@@ -43,6 +47,7 @@ export default function Home() {
         setStatus("ready");
         setMessage("Rendered successfully");
       } catch (error) {
+        renderTarget.current?.replaceChildren();
         svgRef.current = "";
         if (output.current) output.current.innerHTML = "";
         setStatus("error");
@@ -116,6 +121,7 @@ export default function Home() {
           <div className="flex h-12 items-center justify-between border-b border-[#d3e5de] px-5"><span className="font-mono text-[10px] tracking-[0.18em] text-[#47665e]">LIVE PREVIEW</span><span className="rounded border border-[#b8d1c8] px-2 py-0.5 font-mono text-[10px] text-[#47665e]">SVG</span></div>
           <div className="relative flex min-h-72 flex-1 items-center justify-center overflow-auto bg-[radial-gradient(#c9ddd5_1px,transparent_1px)] bg-[size:18px_18px] p-8" aria-live="polite">
             {status === "error" ? <div className="max-w-sm rounded-2xl border border-rose-300/70 bg-[#fff5f5] p-7 text-center shadow-xl shadow-rose-950/10"><span className="mx-auto grid size-11 place-items-center rounded-full bg-rose-100 font-mono text-xl text-rose-700">!</span><p className="mt-4 font-mono text-xs font-medium tracking-[0.14em] text-rose-700">SYNTAX ERROR</p><h2 className="mt-2 text-lg font-semibold text-[#4c161a]">Diagram preview unavailable</h2><p className="mt-2 text-sm leading-6 text-[#7f363b]">{message}</p><p className="mt-5 border-t border-rose-200 pt-4 font-mono text-[11px] text-[#9c5155]">Fix the input to restore the preview.</p></div> : null}
+            <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] top-0 size-px overflow-hidden opacity-0" ref={renderTarget} />
             <div className={`${status === "error" ? "hidden" : "flex"} w-full items-center justify-center [&_svg]:h-auto [&_svg]:max-w-full`} ref={output} />
           </div>
           <div className="flex min-h-16 items-center gap-2 border-t border-[#d3e5de] px-5"><span className="mr-auto font-mono text-[10px] tracking-[0.14em] text-[#47665e]">EXPORT AS</span><button className="rounded-lg border border-[#24473d] px-3 py-2 font-mono text-[11px] text-[#16352d] transition hover:bg-[#d9eee6] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportSvg} disabled={status === "error" || !svgRef.current}>SVG</button><button className="rounded-lg bg-[#16352d] px-3 py-2 font-mono text-[11px] text-white shadow-sm transition hover:bg-[#245a4b] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportPng} disabled={status === "error" || !svgRef.current}>PNG ↓</button></div>
