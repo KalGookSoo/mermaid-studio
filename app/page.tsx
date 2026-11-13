@@ -74,27 +74,39 @@ export default function Home() {
     image.src = url;
   }
 
-  return <main>
-    <header>
-      <a className="brand" href="#top"><span>◇</span> Mermaid Studio</a>
-      <p>Diagram playground</p>
-    </header>
-    <section className="hero" id="top">
-      <div><span className="eyebrow">DIAGRAM, FAST</span><h1>Write the logic.<br/><em>See the shape.</em></h1></div>
-      <p>Turn Mermaid syntax into clear, shareable diagrams—without leaving your browser.</p>
-    </section>
-    <section className="workspace" aria-label="Mermaid editor">
-      <div className="panel editor-panel">
-        <div className="panel-bar"><span className="label">MERMAID INPUT</span><span className="dots">● ● ●</span></div>
-        <textarea aria-label="Mermaid source" spellCheck="false" value={source} onChange={(event) => setSource(event.target.value)} />
-        <div className="editor-footer"><span className={`status ${status}`}>● {message}</span><button className="ghost" onClick={() => setSource(starter)}>Reset example</button></div>
-      </div>
-      <div className="panel preview-panel">
-        <div className="panel-bar"><span className="label">LIVE PREVIEW</span><span className="format">SVG</span></div>
-        <div className="diagram-wrap" ref={output} aria-live="polite" />
-        <div className="export-bar"><span>EXPORT AS</span><button onClick={exportSvg} disabled={!svgRef.current}>SVG</button><button className="primary" onClick={exportPng} disabled={!svgRef.current}>PNG</button></div>
-      </div>
-    </section>
-    <footer><span>Built for thinking in systems.</span><span>All rendering happens locally.</span></footer>
+  const statusColor = status === "error" ? "text-rose-300" : status === "rendering" ? "text-amber-300" : "text-emerald-300";
+
+  return <main className="relative min-h-screen overflow-hidden bg-[#081410] px-5 py-5 font-sans text-[#edf8f4] selection:bg-emerald-300 selection:text-[#081410] sm:px-8 lg:px-12">
+    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,rgba(49,164,133,0.18),transparent_24rem),radial-gradient(circle_at_95%_100%,rgba(255,184,77,0.09),transparent_30rem)]" />
+    <div className="relative mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-7xl flex-col">
+      <header className="flex items-center justify-between border-b border-white/10 pb-5 font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-100/55">
+        <a className="flex items-center gap-2 text-sm font-medium normal-case tracking-tight text-white" href="#top"><span className="grid size-7 place-items-center rounded-lg bg-emerald-300 text-base text-[#081410]">◇</span> Mermaid Studio</a>
+        <span className="hidden sm:block">Local diagram lab · v0.1</span>
+      </header>
+
+      <section className="flex flex-col justify-between gap-7 py-12 sm:py-16 lg:flex-row lg:items-end lg:py-20" id="top">
+        <div>
+          <span className="font-mono text-[10px] font-medium tracking-[0.22em] text-emerald-300">DIAGRAM, FAST</span>
+          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.9] tracking-[-0.055em] text-white sm:text-7xl lg:text-8xl">Write the logic.<br /><em className="font-normal text-emerald-300">See the shape.</em></h1>
+        </div>
+        <p className="max-w-xs text-sm leading-6 text-emerald-50/60 sm:text-base">Mermaid 문법을 시각적 흐름으로 바꾸고, 필요한 형식으로 바로 내보내세요.</p>
+      </section>
+
+      <section className="grid flex-1 gap-4 lg:grid-cols-[0.9fr_1.1fr]" aria-label="Mermaid editor">
+        <div className="flex min-h-[470px] flex-col overflow-hidden rounded-2xl border border-emerald-200/10 bg-[#0d2420] shadow-2xl shadow-black/20">
+          <div className="flex h-12 items-center justify-between border-b border-emerald-200/10 px-5"><span className="font-mono text-[10px] tracking-[0.18em] text-emerald-100/60">MERMAID INPUT</span><span className="font-mono text-[9px] tracking-[0.2em] text-emerald-300/70">● ● ●</span></div>
+          <textarea className="min-h-72 flex-1 resize-none bg-transparent p-6 font-mono text-sm leading-7 text-emerald-50 outline-none placeholder:text-emerald-100/30" aria-label="Mermaid source" spellCheck="false" value={source} onChange={(event) => setSource(event.target.value)} />
+          <div className="flex min-h-14 items-center justify-between gap-4 border-t border-emerald-200/10 px-5"><span className={`font-mono text-[11px] ${statusColor}`}>● {message}</span><button className="rounded-lg px-2 py-1 text-xs text-emerald-50/65 transition hover:bg-white/8 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-300" onClick={() => setSource(starter)}>예시 복원</button></div>
+        </div>
+
+        <div className="flex min-h-[470px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#eff7f3] shadow-2xl shadow-black/20">
+          <div className="flex h-12 items-center justify-between border-b border-[#d3e5de] px-5"><span className="font-mono text-[10px] tracking-[0.18em] text-[#47665e]">LIVE PREVIEW</span><span className="rounded border border-[#b8d1c8] px-2 py-0.5 font-mono text-[10px] text-[#47665e]">SVG</span></div>
+          <div className="flex min-h-72 flex-1 items-center justify-center overflow-auto bg-[radial-gradient(#c9ddd5_1px,transparent_1px)] bg-[size:18px_18px] p-8 [&_svg]:h-auto [&_svg]:max-w-full" ref={output} aria-live="polite" />
+          <div className="flex min-h-16 items-center gap-2 border-t border-[#d3e5de] px-5"><span className="mr-auto font-mono text-[10px] tracking-[0.14em] text-[#47665e]">EXPORT AS</span><button className="rounded-lg border border-[#24473d] px-3 py-2 font-mono text-[11px] text-[#16352d] transition hover:bg-[#d9eee6] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportSvg} disabled={!svgRef.current}>SVG</button><button className="rounded-lg bg-[#16352d] px-3 py-2 font-mono text-[11px] text-white shadow-sm transition hover:bg-[#245a4b] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportPng} disabled={!svgRef.current}>PNG ↓</button></div>
+        </div>
+      </section>
+
+      <footer className="flex flex-col gap-2 pt-6 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-100/35 sm:flex-row sm:justify-between"><span>Built for thinking in systems.</span><span>Rendered in your browser.</span></footer>
+    </div>
   </main>;
 }
