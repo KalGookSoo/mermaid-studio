@@ -33,7 +33,8 @@ export default function Home() {
         const mermaid = (await import("mermaid")).default;
         mermaid.initialize({ startOnLoad: false, theme: "base", securityLevel: "strict", themeVariables: { primaryColor: "#d6f3ec", primaryTextColor: "#102c26", primaryBorderColor: "#167d6b", lineColor: "#397d70", secondaryColor: "#fff5d9", tertiaryColor: "#f7fbf9", fontFamily: "ui-sans-serif, system-ui, sans-serif" } });
         const id = `mermaid-${Date.now()}`;
-        const { svg } = await mermaid.render(id, source);
+        const renderTarget = document.createElement("div");
+        const { svg } = await mermaid.render(id, source, renderTarget);
         if (svg.includes("Syntax error in text")) {
           throw new Error("Syntax error in text");
         }
