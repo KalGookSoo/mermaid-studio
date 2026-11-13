@@ -1,0 +1,188 @@
+export type FlowDirection = {
+  label: string;
+  description: string;
+  code: string;
+};
+
+export type DiagramDefinition = {
+  slug: string;
+  name: string;
+  shortName: string;
+  description: string;
+  useCase: string;
+  syntax: string[];
+  tips: string[];
+  code: string;
+  docsUrl: string;
+  flowDirections?: FlowDirection[];
+};
+
+export const diagrams: DiagramDefinition[] = [
+  {
+    slug: "flowchart", name: "플로우차트", shortName: "Flowchart", description: "과정, 분기, 시스템 흐름을 노드와 연결선으로 표현합니다.", useCase: "업무 프로세스, 사용자 흐름, 알고리즘의 의사결정을 설명할 때 사용합니다.",
+    syntax: ["첫 줄에 flowchart와 방향을 작성합니다.", "A[사각형], B{마름모}, C(둥근 노드)처럼 모양을 정합니다.", "-->|라벨|로 분기 조건을 연결합니다."], tips: ["방향은 TB, TD, BT, LR, RL 중 하나를 사용합니다.", "노드 이름으로 end를 쓸 때는 대괄호나 따옴표로 감싸세요."],
+    code: `flowchart LR
+  idea([Idea]) --> draft[Write Mermaid]
+  draft --> preview{Preview}
+  preview -->|SVG| share[Share]
+  preview -->|PNG| download[Download]`, docsUrl: "https://mermaid.js.org/syntax/flowchart.html",
+    flowDirections: [
+      { label: "TB", description: "위에서 아래", code: "flowchart TB\n  Start --> Check{Ready?}\n  Check -->|Yes| Ship\n  Check -->|No| Fix" },
+      { label: "TD", description: "위에서 아래", code: "flowchart TD\n  Start --> Check{Ready?}\n  Check -->|Yes| Ship\n  Check -->|No| Fix" },
+      { label: "BT", description: "아래에서 위", code: "flowchart BT\n  Start --> Check{Ready?}\n  Check -->|Yes| Ship\n  Check -->|No| Fix" },
+      { label: "LR", description: "왼쪽에서 오른쪽", code: "flowchart LR\n  Start --> Check{Ready?}\n  Check -->|Yes| Ship\n  Check -->|No| Fix" },
+      { label: "RL", description: "오른쪽에서 왼쪽", code: "flowchart RL\n  Start --> Check{Ready?}\n  Check -->|Yes| Ship\n  Check -->|No| Fix" },
+    ],
+  },
+  {
+    slug: "sequence", name: "시퀀스 다이어그램", shortName: "Sequence", description: "참여자 사이의 메시지 흐름을 시간 순서대로 보여줍니다.", useCase: "API 호출, 사용자와 시스템의 상호작용, 서비스 간 통신을 문서화할 때 적합합니다.",
+    syntax: ["sequenceDiagram으로 시작합니다.", "participant로 참여자 이름을 선언할 수 있습니다.", "->>, -->> 등의 화살표로 요청과 응답을 구분합니다."], tips: ["loop, alt, opt 블록으로 조건과 반복을 표현하세요.", "메시지가 많으면 participant 별칭을 짧게 유지하세요."],
+    code: `sequenceDiagram
+  participant User
+  participant App
+  participant API
+  User->>App: Create diagram
+  App->>API: Save source
+  API-->>App: Saved
+  App-->>User: Show preview`, docsUrl: "https://mermaid.js.org/syntax/sequenceDiagram.html",
+  },
+  {
+    slug: "class", name: "클래스 다이어그램", shortName: "Class", description: "객체 지향 모델의 클래스, 속성, 메서드, 관계를 표현합니다.", useCase: "도메인 모델과 코드 구조를 설계하거나 공유할 때 사용합니다.",
+    syntax: ["classDiagram으로 시작합니다.", "class 이름 { } 안에 속성과 메서드를 정의합니다.", "<|--, *--, o-- 같은 관계 화살표를 사용합니다."], tips: ["관계 라벨은 : 뒤에 작성합니다.", "공개/비공개 표기는 +와 -를 사용하세요."],
+    code: `classDiagram
+  class Diagram {
+    +String source
+    +render()
+    +exportSvg()
+  }
+  class Renderer {
+    +render(source)
+  }
+  Diagram --> Renderer : uses`, docsUrl: "https://mermaid.js.org/syntax/classDiagram.html",
+  },
+  {
+    slug: "state", name: "상태 다이어그램", shortName: "State", description: "하나의 객체나 시스템이 거치는 상태와 전이를 보여줍니다.", useCase: "주문, 결제, 배포, UI 상태처럼 수명 주기를 설명할 때 유용합니다.",
+    syntax: ["stateDiagram-v2로 시작합니다.", "[*]는 시작 또는 종료 상태를 나타냅니다.", "전이 뒤에 :로 이벤트 라벨을 붙입니다."], tips: ["복잡한 상태는 state 블록 안에 중첩하세요.", "전이 이름은 실제 이벤트나 조건으로 작성하세요."],
+    code: `stateDiagram-v2
+  [*] --> Draft
+  Draft --> Preview : render
+  Preview --> Draft : edit
+  Preview --> Exported : export
+  Exported --> [*]`, docsUrl: "https://mermaid.js.org/syntax/stateDiagram.html",
+  },
+  {
+    slug: "er", name: "ER 다이어그램", shortName: "ERD", description: "데이터베이스 엔터티의 속성과 관계를 모델링합니다.", useCase: "데이터베이스 스키마와 도메인 데이터 관계를 설계할 때 사용합니다.",
+    syntax: ["erDiagram으로 시작합니다.", "ENTITY ||--o{ ENTITY : 관계 형식으로 카디널리티를 작성합니다.", "속성은 엔터티 블록 안에 타입과 이름을 함께 적습니다."], tips: ["PK, FK 같은 키 제약을 속성 뒤에 표기하세요.", "관계 이름은 동사로 간결하게 작성하세요."],
+    code: `erDiagram
+  USER ||--o{ DIAGRAM : creates
+  USER {
+    string id PK
+    string name
+  }
+  DIAGRAM {
+    string id PK
+    string source
+    datetime created_at
+  }`, docsUrl: "https://mermaid.js.org/syntax/entityRelationshipDiagram.html",
+  },
+  {
+    slug: "gantt", name: "간트 차트", shortName: "Gantt", description: "일정, 기간, 의존성을 시간 축 위에 표현합니다.", useCase: "프로젝트 계획, 출시 일정, 마일스톤 관리를 보여줄 때 적합합니다.",
+    syntax: ["gantt와 title로 시작합니다.", "dateFormat을 지정한 뒤 section으로 작업을 묶습니다.", "작업에는 상태, 시작일, 기간을 작성합니다."], tips: ["crit는 핵심 경로, milestone은 이정표를 표시합니다.", "작업 ID로 다른 작업의 시작 시점을 연결할 수 있습니다."],
+    code: `gantt
+  title Mermaid Studio roadmap
+  dateFormat YYYY-MM-DD
+  section Build
+  Editor UI       :done, ui, 2026-01-01, 3d
+  Diagram guides  :active, guides, after ui, 5d
+  section Release
+  Launch          :milestone, launch, after guides, 0d`, docsUrl: "https://mermaid.js.org/syntax/gantt.html",
+  },
+  {
+    slug: "pie", name: "파이 차트", shortName: "Pie", description: "전체 대비 항목별 비율을 간단히 비교합니다.", useCase: "분포, 투표, 카테고리 점유율을 빠르게 공유할 때 사용합니다.",
+    syntax: ["pie와 title로 시작합니다.", "라벨 : 값 형식으로 항목을 작성합니다.", "showData를 쓰면 값도 함께 표시됩니다."], tips: ["항목은 5~7개 이하로 유지하세요.", "시간에 따른 변화에는 선 차트나 XY 차트를 사용하세요."],
+    code: `pie showData
+  title Export formats
+  "SVG" : 62
+  "PNG" : 28
+  "Other" : 10`, docsUrl: "https://mermaid.js.org/syntax/pie.html",
+  },
+  {
+    slug: "git-graph", name: "Git 그래프", shortName: "Git Graph", description: "브랜치와 커밋 병합 흐름을 시각화합니다.", useCase: "Git 전략, 릴리스 브랜치, 병합 정책을 설명할 때 적합합니다.",
+    syntax: ["gitGraph로 시작합니다.", "commit id:로 커밋을 추가합니다.", "branch와 checkout으로 브랜치를 이동합니다."], tips: ["커밋 ID는 짧은 의미 단위로 작성하세요.", "merge 대상 브랜치를 명시해 병합 의도를 드러내세요."],
+    code: `gitGraph
+  commit id: "initial"
+  branch feature
+  checkout feature
+  commit id: "guides"
+  checkout main
+  commit id: "review"
+  merge feature
+  commit id: "release"`, docsUrl: "https://mermaid.js.org/syntax/gitgraph.html",
+  },
+  {
+    slug: "mindmap", name: "마인드맵", shortName: "Mindmap", description: "중심 주제에서 하위 아이디어를 계층적으로 확장합니다.", useCase: "브레인스토밍, 문서 목차, 제품 기능 탐색에 유용합니다.",
+    syntax: ["mindmap으로 시작합니다.", "들여쓰기로 부모와 자식 관계를 만듭니다.", "루트는 root((텍스트)) 형태로 강조할 수 있습니다."], tips: ["깊이를 3~4단계로 제한하세요.", "한 노드에는 하나의 짧은 개념만 넣으세요."],
+    code: `mindmap
+  root((Mermaid Studio))
+    Editor
+      Live preview
+      SVG export
+      PNG export
+    Guides
+      Samples
+      Syntax tips`, docsUrl: "https://mermaid.js.org/syntax/mindmap.html",
+  },
+  {
+    slug: "timeline", name: "타임라인", shortName: "Timeline", description: "연도나 시점별 사건을 시간 순서대로 나열합니다.", useCase: "프로젝트 연혁, 제품 출시, 조직의 주요 변화를 표현할 때 사용합니다.",
+    syntax: ["timeline과 title로 시작합니다.", "시간 값 뒤에 :로 사건을 씁니다.", "같은 시점에는 여러 사건을 줄바꿈으로 추가할 수 있습니다."], tips: ["시간 단위는 한 종류로 통일하세요.", "사건의 문구는 결과 중심으로 짧게 작성하세요."],
+    code: `timeline
+  title Mermaid Studio milestones
+  2026 Q1 : Editor prototype
+          : SVG export
+  2026 Q2 : Diagram guides
+          : Search indexing`, docsUrl: "https://mermaid.js.org/syntax/timeline.html",
+  },
+  {
+    slug: "user-journey", name: "사용자 여정", shortName: "User Journey", description: "사용자가 목표에 도달하는 과정과 경험 점수를 표현합니다.", useCase: "온보딩, 구매, 고객 지원 흐름에서 마찰 지점을 찾을 때 사용합니다.",
+    syntax: ["journey와 title로 시작합니다.", "section으로 단계를 나눕니다.", "작업 : 점수 : 담당자 형식으로 기록합니다."], tips: ["점수는 1~5로 일관되게 매기세요.", "낮은 점수 작업을 개선 후보로 검토하세요."],
+    code: `journey
+  title Create a diagram
+  section Explore
+    Open editor: 5: User
+    Choose sample: 4: User
+  section Create
+    Edit source: 3: User
+    Export image: 5: User`, docsUrl: "https://mermaid.js.org/syntax/userJourney.html",
+  },
+  {
+    slug: "quadrant", name: "사분면 차트", shortName: "Quadrant", description: "두 기준을 기준으로 항목의 상대 위치를 비교합니다.", useCase: "우선순위, 위험도, 시장 포지셔닝을 2축으로 평가할 때 사용합니다.",
+    syntax: ["quadrantChart로 시작합니다.", "x-axis와 y-axis에 축의 양끝을 씁니다.", "항목: [x, y]로 0~1 좌표를 지정합니다."], tips: ["축은 서로 독립적인 판단 기준으로 정하세요.", "항목이 너무 많으면 핵심 후보만 남기세요."],
+    code: `quadrantChart
+  title Feature prioritization
+  x-axis Low effort --> High effort
+  y-axis Low impact --> High impact
+  quadrant-1 Invest
+  quadrant-2 Plan
+  quadrant-3 Skip
+  quadrant-4 Quick win
+  Guides: [0.25, 0.82]
+  Export: [0.72, 0.76]
+  Themes: [0.68, 0.35]`, docsUrl: "https://mermaid.js.org/syntax/quadrantChart.html",
+  },
+  {
+    slug: "xy-chart", name: "XY 차트", shortName: "XY Chart", description: "범주나 수치 축 위에서 막대·선 데이터의 추이를 비교합니다.", useCase: "월별 사용량, 성과 지표, 두 데이터 시리즈의 변화를 보여줄 때 적합합니다.",
+    syntax: ["xychart-beta로 시작합니다.", "x-axis에 카테고리, y-axis에 범위를 지정합니다.", "bar와 line에 값 배열을 넣습니다."], tips: ["모든 데이터 배열의 길이는 x축 항목 수와 맞추세요.", "값 범위는 실제 데이터보다 조금 여유 있게 잡으세요."],
+    code: `xychart-beta
+  title "Monthly exports"
+  x-axis [Jan, Feb, Mar, Apr, May]
+  y-axis "Exports" 0 --> 60
+  bar [20, 32, 28, 45, 52]
+  line [18, 25, 31, 40, 56]`, docsUrl: "https://mermaid.js.org/syntax/xyChart.html",
+  },
+];
+
+export const defaultDiagram = diagrams[0];
+
+export function getDiagram(slug: string | null | undefined) {
+  return diagrams.find((diagram) => diagram.slug === slug) ?? defaultDiagram;
+}

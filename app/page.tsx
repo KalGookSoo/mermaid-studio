@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { defaultDiagram, getDiagram } from "./diagram-catalog";
 
-const starter = `flowchart LR
-    idea([Idea]) --> draft[Write Mermaid]
-    draft --> preview{Preview}
-    preview -->|SVG| share[Share]
-    preview -->|PNG| download[Download]`;
+const starter = defaultDiagram.code;
 
 type Status = "ready" | "rendering" | "error";
 
@@ -25,6 +23,11 @@ export default function Home() {
   const output = useRef<HTMLDivElement>(null);
   const renderTarget = useRef<HTMLDivElement>(null);
   const svgRef = useRef("");
+
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("example");
+    setSource(getDiagram(slug).code);
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(async () => {
@@ -99,7 +102,7 @@ export default function Home() {
     <div className="relative mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-7xl flex-col">
       <header className="flex items-center justify-between border-b border-white/10 pb-5 font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-100/55">
         <a className="flex items-center gap-2 text-sm font-medium normal-case tracking-tight text-white" href="#top"><span className="grid size-7 place-items-center rounded-lg bg-emerald-300 text-base text-[#081410]">◇</span> Mermaid Studio</a>
-        <span className="hidden sm:block">Local diagram lab · v0.1</span>
+        <Link className="text-emerald-100/55 transition hover:text-emerald-200" href="/guides">Diagram guides ↗</Link>
       </header>
 
       <section className="flex flex-col justify-between gap-7 py-12 sm:py-16 lg:flex-row lg:items-end lg:py-20" id="top">
