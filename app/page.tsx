@@ -10,6 +10,14 @@ const starter = `flowchart LR
 
 type Status = "ready" | "rendering" | "error";
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.includes("Syntax error in text")) {
+    return "Mermaid syntax could not be parsed.";
+  }
+
+  return "Check the Mermaid syntax in the input panel and try again.";
+}
+
 export default function Home() {
   const [source, setSource] = useState(starter);
   const [status, setStatus] = useState<Status>("ready");
@@ -26,14 +34,18 @@ export default function Home() {
         mermaid.initialize({ startOnLoad: false, theme: "base", securityLevel: "strict", themeVariables: { primaryColor: "#d6f3ec", primaryTextColor: "#102c26", primaryBorderColor: "#167d6b", lineColor: "#397d70", secondaryColor: "#fff5d9", tertiaryColor: "#f7fbf9", fontFamily: "ui-sans-serif, system-ui, sans-serif" } });
         const id = `mermaid-${Date.now()}`;
         const { svg } = await mermaid.render(id, source);
+        if (svg.includes("Syntax error in text")) {
+          throw new Error("Syntax error in text");
+        }
         svgRef.current = svg;
         if (output.current) output.current.innerHTML = svg;
         setStatus("ready");
         setMessage("Rendered successfully");
       } catch (error) {
+        svgRef.current = "";
         if (output.current) output.current.innerHTML = "";
         setStatus("error");
-        setMessage(error instanceof Error ? error.message.replace(/^Parse error.*?\n/, "Parse error: ") : "Could not render this Mermaid code.");
+        setMessage(getErrorMessage(error));
       }
     }, 350);
     return () => window.clearTimeout(timer);
@@ -96,13 +108,16 @@ export default function Home() {
         <div className="flex min-h-[470px] flex-col overflow-hidden rounded-2xl border border-emerald-200/10 bg-[#0d2420] shadow-2xl shadow-black/20">
           <div className="flex h-12 items-center justify-between border-b border-emerald-200/10 px-5"><span className="font-mono text-[10px] tracking-[0.18em] text-emerald-100/60">MERMAID INPUT</span><span className="font-mono text-[9px] tracking-[0.2em] text-emerald-300/70">● ● ●</span></div>
           <textarea className="min-h-72 flex-1 resize-none bg-transparent p-6 font-mono text-sm leading-7 text-emerald-50 outline-none placeholder:text-emerald-100/30" aria-label="Mermaid source" spellCheck="false" value={source} onChange={(event) => setSource(event.target.value)} />
-          <div className="flex min-h-14 items-center justify-between gap-4 border-t border-emerald-200/10 px-5"><span className={`font-mono text-[11px] ${statusColor}`}>● {message}</span><button className="rounded-lg px-2 py-1 text-xs text-emerald-50/65 transition hover:bg-white/8 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-300" onClick={() => setSource(starter)}>예시 복원</button></div>
+          <div className="flex min-h-14 items-center justify-between gap-4 border-t border-emerald-200/10 px-5"><span className={`font-mono text-[11px] ${statusColor}`}>● {status === "error" ? "Preview error" : message}</span><button className="rounded-lg px-2 py-1 text-xs text-emerald-50/65 transition hover:bg-white/8 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-300" onClick={() => setSource(starter)}>예시 복원</button></div>
         </div>
 
         <div className="flex min-h-[470px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#eff7f3] shadow-2xl shadow-black/20">
           <div className="flex h-12 items-center justify-between border-b border-[#d3e5de] px-5"><span className="font-mono text-[10px] tracking-[0.18em] text-[#47665e]">LIVE PREVIEW</span><span className="rounded border border-[#b8d1c8] px-2 py-0.5 font-mono text-[10px] text-[#47665e]">SVG</span></div>
-          <div className="flex min-h-72 flex-1 items-center justify-center overflow-auto bg-[radial-gradient(#c9ddd5_1px,transparent_1px)] bg-[size:18px_18px] p-8 [&_svg]:h-auto [&_svg]:max-w-full" ref={output} aria-live="polite" />
-          <div className="flex min-h-16 items-center gap-2 border-t border-[#d3e5de] px-5"><span className="mr-auto font-mono text-[10px] tracking-[0.14em] text-[#47665e]">EXPORT AS</span><button className="rounded-lg border border-[#24473d] px-3 py-2 font-mono text-[11px] text-[#16352d] transition hover:bg-[#d9eee6] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportSvg} disabled={!svgRef.current}>SVG</button><button className="rounded-lg bg-[#16352d] px-3 py-2 font-mono text-[11px] text-white shadow-sm transition hover:bg-[#245a4b] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportPng} disabled={!svgRef.current}>PNG ↓</button></div>
+          <div className="relative flex min-h-72 flex-1 items-center justify-center overflow-auto bg-[radial-gradient(#c9ddd5_1px,transparent_1px)] bg-[size:18px_18px] p-8" aria-live="polite">
+            {status === "error" ? <div className="max-w-sm rounded-2xl border border-rose-300/70 bg-[#fff5f5] p-7 text-center shadow-xl shadow-rose-950/10"><span className="mx-auto grid size-11 place-items-center rounded-full bg-rose-100 font-mono text-xl text-rose-700">!</span><p className="mt-4 font-mono text-xs font-medium tracking-[0.14em] text-rose-700">SYNTAX ERROR</p><h2 className="mt-2 text-lg font-semibold text-[#4c161a]">Diagram preview unavailable</h2><p className="mt-2 text-sm leading-6 text-[#7f363b]">{message}</p><p className="mt-5 border-t border-rose-200 pt-4 font-mono text-[11px] text-[#9c5155]">Fix the input to restore the preview.</p></div> : null}
+            <div className={`${status === "error" ? "hidden" : "flex"} w-full items-center justify-center [&_svg]:h-auto [&_svg]:max-w-full`} ref={output} />
+          </div>
+          <div className="flex min-h-16 items-center gap-2 border-t border-[#d3e5de] px-5"><span className="mr-auto font-mono text-[10px] tracking-[0.14em] text-[#47665e]">EXPORT AS</span><button className="rounded-lg border border-[#24473d] px-3 py-2 font-mono text-[11px] text-[#16352d] transition hover:bg-[#d9eee6] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportSvg} disabled={status === "error" || !svgRef.current}>SVG</button><button className="rounded-lg bg-[#16352d] px-3 py-2 font-mono text-[11px] text-white shadow-sm transition hover:bg-[#245a4b] disabled:cursor-not-allowed disabled:opacity-35" onClick={exportPng} disabled={status === "error" || !svgRef.current}>PNG ↓</button></div>
         </div>
       </section>
 
