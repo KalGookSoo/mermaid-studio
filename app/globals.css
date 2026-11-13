@@ -10,3 +10,4 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: #081410; color: #edf8f4; }
 textarea { field-sizing: content; }
+button { cursor: pointer; }

@@ -17,6 +17,8 @@ export type DiagramDefinition = {
   flowDirections?: FlowDirection[];
 };
 
+export type DiagramText = Pick<DiagramDefinition, "name" | "description" | "useCase" | "syntax" | "tips"> & { flowDirectionDescriptions?: string[] };
+
 export const diagrams: DiagramDefinition[] = [
   {
     slug: "flowchart", name: "플로우차트", shortName: "Flowchart", description: "과정, 분기, 시스템 흐름을 노드와 연결선으로 표현합니다.", useCase: "업무 프로세스, 사용자 흐름, 알고리즘의 의사결정을 설명할 때 사용합니다.",
@@ -185,4 +187,25 @@ export const defaultDiagram = diagrams[0];
 
 export function getDiagram(slug: string | null | undefined) {
   return diagrams.find((diagram) => diagram.slug === slug) ?? defaultDiagram;
+}
+
+const englishDiagramText: Record<string, DiagramText> = {
+  flowchart: { name: "Flowchart", description: "Visualize processes, decisions, and system flows with nodes and connectors.", useCase: "Use it for business processes, user flows, and algorithm decisions.", syntax: ["Start with flowchart and a direction.", "Choose shapes such as A[rectangle], B{diamond}, or C(round node).", "Use -->|label| to create labeled branches."], tips: ["Use one of TB, TD, BT, LR, or RL for direction.", "Wrap node names such as end in brackets or quotes."], flowDirectionDescriptions: ["Top to bottom", "Top to bottom", "Bottom to top", "Left to right", "Right to left"] },
+  sequence: { name: "Sequence Diagram", description: "Show messages between participants in chronological order.", useCase: "Use it to document API calls, system interactions, and service communication.", syntax: ["Start with sequenceDiagram.", "Use participant to declare actors.", "Use arrows such as ->> and -->> for requests and responses."], tips: ["Use loop, alt, and opt blocks for repetition and conditions.", "Keep participant aliases short when there are many messages."] },
+  class: { name: "Class Diagram", description: "Model classes, properties, methods, and relationships in an object-oriented system.", useCase: "Use it to design or share a domain model and code structure.", syntax: ["Start with classDiagram.", "Define properties and methods inside class Name { }.", "Use relationship arrows such as <|--, *--, and o--."], tips: ["Add relationship labels after a colon.", "Use + and - for public and private members."] },
+  state: { name: "State Diagram", description: "Show the states and transitions of an object or system.", useCase: "Use it for lifecycles such as orders, payments, deployments, and UI state.", syntax: ["Start with stateDiagram-v2.", "[*] represents the initial or final state.", "Add an event label after a colon."], tips: ["Nest complex states in a state block.", "Name transitions after actual events or conditions."] },
+  er: { name: "Entity Relationship Diagram", description: "Model database entities, attributes, and relationships.", useCase: "Use it when designing a database schema or domain data model.", syntax: ["Start with erDiagram.", "Write cardinality as ENTITY ||--o{ ENTITY : relationship.", "List a type and name for each entity attribute."], tips: ["Mark key constraints such as PK and FK.", "Use concise verbs for relationship names."] },
+  gantt: { name: "Gantt Chart", description: "Visualize schedules, durations, and dependencies on a timeline.", useCase: "Use it for project plans, release schedules, and milestones.", syntax: ["Start with gantt and title.", "Set dateFormat, then group work with section.", "Add status, start date, and duration to each task."], tips: ["Use crit for a critical task and milestone for milestones.", "Reference task IDs to link start dates."] },
+  pie: { name: "Pie Chart", description: "Compare category proportions within a whole.", useCase: "Use it to share distributions, votes, and category share at a glance.", syntax: ["Start with pie and title.", "Write entries as label : value.", "Use showData to display the values."], tips: ["Keep the number of categories to five to seven.", "Use a line or XY chart for change over time."] },
+  "git-graph": { name: "Git Graph", description: "Visualize branches, commits, and merges.", useCase: "Use it to explain Git strategy, release branches, and merge policy.", syntax: ["Start with gitGraph.", "Add a commit with commit id:.", "Use branch and checkout to move between branches."], tips: ["Keep commit IDs short and meaningful.", "Name the merge target to make intent clear."] },
+  mindmap: { name: "Mindmap", description: "Expand ideas hierarchically from a central topic.", useCase: "Use it for brainstorming, document outlines, and feature exploration.", syntax: ["Start with mindmap.", "Use indentation for parent and child relationships.", "Use root((text)) to emphasize the root."], tips: ["Limit depth to three or four levels.", "Keep one short concept per node."] },
+  timeline: { name: "Timeline", description: "List events in chronological order by year or period.", useCase: "Use it for project history, product releases, and key organizational events.", syntax: ["Start with timeline and title.", "Write an event after a colon following the time value.", "Add multiple events at the same time on new lines."], tips: ["Use a single time unit consistently.", "Keep event copy short and outcome-focused."] },
+  "user-journey": { name: "User Journey", description: "Show a user path and its experience scores.", useCase: "Use it to find friction in onboarding, purchase, and support flows.", syntax: ["Start with journey and title.", "Divide stages with section.", "Write activities as task : score : actor."], tips: ["Score consistently from one to five.", "Review lower-scoring tasks as improvement candidates."] },
+  quadrant: { name: "Quadrant Chart", description: "Compare the relative position of items against two criteria.", useCase: "Use it to evaluate priorities, risk, or market positioning on two axes.", syntax: ["Start with quadrantChart.", "Write both ends of x-axis and y-axis.", "Set positions from 0 to 1 with Item: [x, y]."], tips: ["Choose independent criteria for each axis.", "Keep only the most important items when the list grows."] },
+  "xy-chart": { name: "XY Chart", description: "Compare bar and line data across categories or a numeric axis.", useCase: "Use it for monthly usage, performance metrics, and series trends.", syntax: ["Start with xychart-beta.", "Define categories on x-axis and a range on y-axis.", "Add value arrays with bar and line."], tips: ["Match every data array to the x-axis item count.", "Leave a small margin above the real value range."] },
+};
+
+export function getDiagramText(diagram: DiagramDefinition, locale: "ko" | "en"): DiagramText {
+  if (locale === "en") return englishDiagramText[diagram.slug];
+  return { name: diagram.name, description: diagram.description, useCase: diagram.useCase, syntax: diagram.syntax, tips: diagram.tips, flowDirectionDescriptions: diagram.flowDirections?.map((direction) => direction.description) };
 }
