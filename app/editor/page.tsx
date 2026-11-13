@@ -66,7 +66,7 @@ export default function Home() {
         if (!target) return;
         target.replaceChildren();
         const mermaid = (await import("mermaid")).default;
-        mermaid.initialize({ startOnLoad: false, theme: "base", securityLevel: "strict", flowchart: { htmlLabels: false }, themeVariables: { primaryColor: "#d6f3ec", primaryTextColor: "#102c26", primaryBorderColor: "#167d6b", lineColor: "#397d70", secondaryColor: "#fff5d9", tertiaryColor: "#f7fbf9", fontFamily: "ui-sans-serif, system-ui, sans-serif" } });
+        mermaid.initialize({ startOnLoad: false, theme: "base", securityLevel: "strict", flowchart: { htmlLabels: false }, themeVariables: { background: "#f7fbf9", primaryColor: "#d6f3ec", primaryTextColor: "#102c26", primaryBorderColor: "#167d6b", lineColor: "#397d70", secondaryColor: "#fff5d9", tertiaryColor: "#eff7f3", textColor: "#16352d", fontFamily: "ui-sans-serif, system-ui, sans-serif", fontSize: "13px" } });
         const id = `mermaid-${Date.now()}`;
         const { svg } = await mermaid.render(id, source, target);
         target.replaceChildren();
