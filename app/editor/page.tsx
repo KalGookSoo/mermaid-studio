@@ -1,6 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  ArrowPathIcon,
+  ArrowsPointingOutIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  MagnifyingGlassMinusIcon,
+  MagnifyingGlassPlusIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { GlobalNavigation } from "../components/global-navigation";
 import { defaultDiagram, getDiagram } from "../diagram-catalog";
 import { useLocale } from "../i18n";
@@ -33,7 +44,12 @@ export default function Home() {
   const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
   const [exportScale, setExportScale] = useState(2);
   const [exportError, setExportError] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 });
+  const [renderVersion, setRenderVersion] = useState(0);
   const output = useRef<HTMLDivElement>(null);
+  const modalOutput = useRef<HTMLDivElement>(null);
   const renderTarget = useRef<HTMLDivElement>(null);
   const svgRef = useRef("");
 
@@ -75,6 +91,7 @@ export default function Home() {
         }
         svgRef.current = svg;
         if (output.current) output.current.innerHTML = svg;
+        setRenderVersion((version) => version + 1);
         setStatus("ready");
         setMessage(text.rendered);
         logger.info("render.succeeded", { svgLength: svg.length, usesForeignObject: svg.includes("<foreignObject") });
@@ -89,6 +106,20 @@ export default function Home() {
     }, 350);
     return () => window.clearTimeout(timer);
   }, [source, text]);
+
+  useEffect(() => {
+    if (!isPreviewOpen || !modalOutput.current) return;
+    modalOutput.current.innerHTML = svgRef.current;
+  }, [isPreviewOpen, renderVersion]);
+
+  useEffect(() => {
+    if (!isPreviewOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsPreviewOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isPreviewOpen]);
 
   function saveBlob(blob: Blob, name: string) {
     const link = document.createElement("a");
@@ -149,6 +180,22 @@ export default function Home() {
     logger.info("source.cleared");
   }
 
+  function openPreview() {
+    setPreviewZoom(1);
+    setPreviewOffset({ x: 0, y: 0 });
+    setIsPreviewOpen(true);
+    logger.info("preview.fullscreen.opened");
+  }
+
+  function resetPreview() {
+    setPreviewZoom(1);
+    setPreviewOffset({ x: 0, y: 0 });
+  }
+
+  function panPreview(x: number, y: number) {
+    setPreviewOffset((offset) => ({ x: offset.x + x, y: offset.y + y }));
+  }
+
   const statusColor = status === "error" ? "text-rose-300" : status === "rendering" ? "text-amber-300" : "text-emerald-300";
   const saveMessage = saveStatus === "saving" ? text.saving : saveStatus === "saved" ? text.saved : saveStatus === "cleared" ? text.clearedSaved : "";
 
@@ -173,7 +220,7 @@ export default function Home() {
         </div>
 
         <div className="flex min-h-[470px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#eff7f3] shadow-2xl shadow-black/20">
-          <div className="flex h-12 items-center justify-between border-b border-[#d3e5de] px-5"><span className="font-mono text-[10px] tracking-[0.18em] text-[#47665e]">{text.previewLabel}</span><span className="rounded border border-[#b8d1c8] px-2 py-0.5 font-mono text-[10px] text-[#47665e]">SVG</span></div>
+          <div className="flex h-12 items-center justify-between border-b border-[#d3e5de] px-5"><span className="font-mono text-[10px] tracking-[0.18em] text-[#47665e]">{text.previewLabel}</span><div className="flex items-center gap-2"><button aria-label={text.fullScreen} className="grid size-7 place-items-center rounded border border-[#b8d1c8] text-[#47665e] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-35" disabled={status === "error" || !svgRef.current} onClick={openPreview} title={text.fullScreen} type="button"><ArrowsPointingOutIcon className="size-4" /></button><span className="rounded border border-[#b8d1c8] px-2 py-0.5 font-mono text-[10px] text-[#47665e]">SVG</span></div></div>
           <div className="relative flex min-h-72 flex-1 items-center justify-center overflow-auto bg-[radial-gradient(#c9ddd5_1px,transparent_1px)] bg-[size:18px_18px] p-8" aria-live="polite">
             {status === "error" ? <div className="max-w-sm rounded-2xl border border-rose-300/70 bg-[#fff5f5] p-7 text-center shadow-xl shadow-rose-950/10"><span className="mx-auto grid size-11 place-items-center rounded-full bg-rose-100 font-mono text-xl text-rose-700">!</span><p className="mt-4 font-mono text-xs font-medium tracking-[0.14em] text-rose-700">{text.syntaxError}</p><h2 className="mt-2 text-lg font-semibold text-[#4c161a]">{text.unavailable}</h2><p className="mt-2 text-sm leading-6 text-[#7f363b]">{message}</p><p className="mt-5 border-t border-rose-200 pt-4 font-mono text-[11px] text-[#9c5155]">{text.fixInput}</p></div> : null}
             <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] top-0 size-px overflow-hidden opacity-0" ref={renderTarget} />
@@ -183,7 +230,9 @@ export default function Home() {
         </div>
       </section>
 
-      {isExportOpen ? <div className="fixed inset-0 z-50 grid place-items-center bg-[#081410]/70 p-5" role="dialog" aria-modal="true" aria-labelledby="export-title"><div className="w-full max-w-md rounded-2xl border border-emerald-100/15 bg-[#102521] p-6 shadow-2xl shadow-black/40"><div className="flex items-start justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[0.16em] text-emerald-300">{text.exportAs}</p><h2 className="mt-2 text-xl font-semibold text-white" id="export-title">{text.exportDiagram}</h2></div><button aria-label={text.close} className="rounded-lg px-2 py-1 text-lg text-emerald-100/60 transition hover:bg-white/10 hover:text-white" onClick={() => setIsExportOpen(false)} type="button">×</button></div><fieldset className="mt-7"><legend className="font-mono text-[10px] tracking-[0.14em] text-emerald-200/70">{text.exportFormat}</legend><div className="mt-3 grid gap-2">{([{ value: "svg", label: "SVG", description: text.svgDescription }, { value: "png", label: "PNG", description: text.pngDescription }, { value: "jpeg", label: "JPEG", description: text.jpegDescription }] as const).map((option) => <label className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition ${exportFormat === option.value ? "border-emerald-300 bg-emerald-300/10" : "border-emerald-100/10 hover:border-emerald-100/30"}`} key={option.value}><span><span className="font-mono text-sm text-white">{option.label}</span><span className="ml-3 text-xs text-emerald-50/55">{option.description}</span></span><input checked={exportFormat === option.value} className="accent-emerald-300" name="format" onChange={() => setExportFormat(option.value)} type="radio" /></label>)}</div></fieldset>{exportFormat !== "svg" ? <fieldset className="mt-6"><legend className="font-mono text-[10px] tracking-[0.14em] text-emerald-200/70">{text.exportResolution}</legend><div className="mt-3 grid grid-cols-3 gap-2">{[1, 2, 3].map((scale) => <button className={`rounded-lg border px-3 py-2.5 font-mono text-xs transition ${exportScale === scale ? "border-emerald-300 bg-emerald-300 text-[#081410]" : "border-emerald-100/15 text-emerald-50/70 hover:bg-white/10"}`} key={scale} onClick={() => setExportScale(scale)} type="button">{scale}×</button>)}</div></fieldset> : null}{exportError ? <p className="mt-5 rounded-lg border border-rose-300/30 bg-rose-950/25 px-3 py-2 text-sm leading-6 text-rose-100">{exportError}</p> : null}<button className="mt-8 w-full rounded-lg bg-emerald-300 px-4 py-3 font-mono text-xs font-medium tracking-[0.12em] text-[#081410] transition hover:bg-emerald-200" onClick={exportDiagram} type="button">{text.exportAction}</button></div></div> : null}
+      {isPreviewOpen ? <div className="fixed inset-0 z-50 flex flex-col bg-[#eff7f3] p-3 sm:p-6" role="dialog" aria-modal="true" aria-label={text.fullScreen}><div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3 rounded-t-2xl border border-[#d3e5de] bg-[#eff7f3] px-4 py-3 sm:px-6"><div><p className="font-mono text-[10px] tracking-[0.18em] text-[#47665e]">{text.previewLabel}</p><p className="mt-1 font-mono text-[10px] text-[#47665e]/70">{Math.round(previewZoom * 100)}%</p></div><div className="flex items-center gap-2"><button className="rounded-lg border border-[#b8d1c8] px-3 py-2 font-mono text-[11px] text-[#16352d] transition hover:border-[#167d6b] hover:bg-[#d6f3ec]" onClick={() => { setExportError(""); setIsExportOpen(true); }} type="button">{text.exportAction}</button><button aria-label={text.close} className="grid size-8 place-items-center rounded-lg text-[#47665e] transition hover:bg-white hover:text-[#16352d]" onClick={() => setIsPreviewOpen(false)} title={text.close} type="button"><XMarkIcon className="size-4" /></button></div></div><div className="relative mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 items-center justify-center overflow-hidden rounded-b-2xl border-x border-b border-[#d3e5de] bg-[#eff7f3] p-8"><div className="flex max-h-full max-w-full items-center justify-center transition-transform duration-150 [&_svg]:h-auto [&_svg]:max-h-[72vh] [&_svg]:max-w-[88vw]" ref={modalOutput} style={{ transform: `translate(${previewOffset.x}px, ${previewOffset.y}px) scale(${previewZoom})` }} /><div className="absolute bottom-4 right-4 grid grid-cols-3 gap-1 rounded-xl border border-[#d8d0c0] bg-[#fffaf0] p-1.5 shadow-xl shadow-[#16352d]/15"><span /><button aria-label={`${text.panDiagram}: up`} className="grid size-8 place-items-center rounded-md text-[#47665e] transition hover:bg-[#d6f3ec] hover:text-[#16352d]" onClick={() => panPreview(0, -80)} type="button"><ChevronUpIcon className="size-4" /></button><button aria-label={text.zoomIn} className="grid size-8 place-items-center rounded-md text-[#47665e] transition hover:bg-[#d6f3ec] hover:text-[#16352d]" onClick={() => setPreviewZoom((zoom) => Math.min(2.5, zoom + 0.2))} type="button"><MagnifyingGlassPlusIcon className="size-4" /></button><button aria-label={`${text.panDiagram}: left`} className="grid size-8 place-items-center rounded-md text-[#47665e] transition hover:bg-[#d6f3ec] hover:text-[#16352d]" onClick={() => panPreview(-80, 0)} type="button"><ChevronLeftIcon className="size-4" /></button><button aria-label={text.resetView} className="grid size-8 place-items-center rounded-md border border-[#b8d1c8] text-[#167d6b] transition hover:bg-[#d6f3ec] hover:text-[#16352d]" onClick={resetPreview} type="button"><ArrowPathIcon className="size-4" /></button><button aria-label={`${text.panDiagram}: right`} className="grid size-8 place-items-center rounded-md text-[#47665e] transition hover:bg-[#d6f3ec] hover:text-[#16352d]" onClick={() => panPreview(80, 0)} type="button"><ChevronRightIcon className="size-4" /></button><span /><button aria-label={`${text.panDiagram}: down`} className="grid size-8 place-items-center rounded-md text-[#47665e] transition hover:bg-[#d6f3ec] hover:text-[#16352d]" onClick={() => panPreview(0, 80)} type="button"><ChevronDownIcon className="size-4" /></button><button aria-label={text.zoomOut} className="grid size-8 place-items-center rounded-md text-[#47665e] transition hover:bg-[#d6f3ec] hover:text-[#16352d]" onClick={() => setPreviewZoom((zoom) => Math.max(0.4, zoom - 0.2))} type="button"><MagnifyingGlassMinusIcon className="size-4" /></button></div></div></div> : null}
+
+      {isExportOpen ? <div className="fixed inset-0 z-[60] grid place-items-center bg-[#081410]/70 p-5" role="dialog" aria-modal="true" aria-labelledby="export-title"><div className="w-full max-w-md rounded-2xl border border-emerald-100/15 bg-[#102521] p-6 shadow-2xl shadow-black/40"><div className="flex items-start justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[0.16em] text-emerald-300">{text.exportAs}</p><h2 className="mt-2 text-xl font-semibold text-white" id="export-title">{text.exportDiagram}</h2></div><button aria-label={text.close} className="rounded-lg px-2 py-1 text-lg text-emerald-100/60 transition hover:bg-white/10 hover:text-white" onClick={() => setIsExportOpen(false)} type="button">×</button></div><fieldset className="mt-7"><legend className="font-mono text-[10px] tracking-[0.14em] text-emerald-200/70">{text.exportFormat}</legend><div className="mt-3 grid gap-2">{([{ value: "svg", label: "SVG", description: text.svgDescription }, { value: "png", label: "PNG", description: text.pngDescription }, { value: "jpeg", label: "JPEG", description: text.jpegDescription }] as const).map((option) => <label className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition ${exportFormat === option.value ? "border-emerald-300 bg-emerald-300/10" : "border-emerald-100/10 hover:border-emerald-100/30"}`} key={option.value}><span><span className="font-mono text-sm text-white">{option.label}</span><span className="ml-3 text-xs text-emerald-50/55">{option.description}</span></span><input checked={exportFormat === option.value} className="accent-emerald-300" name="format" onChange={() => setExportFormat(option.value)} type="radio" /></label>)}</div></fieldset>{exportFormat !== "svg" ? <fieldset className="mt-6"><legend className="font-mono text-[10px] tracking-[0.14em] text-emerald-200/70">{text.exportResolution}</legend><div className="mt-3 grid grid-cols-3 gap-2">{[1, 2, 3].map((scale) => <button className={`rounded-lg border px-3 py-2.5 font-mono text-xs transition ${exportScale === scale ? "border-emerald-300 bg-emerald-300 text-[#081410]" : "border-emerald-100/15 text-emerald-50/70 hover:bg-white/10"}`} key={scale} onClick={() => setExportScale(scale)} type="button">{scale}×</button>)}</div></fieldset> : null}{exportError ? <p className="mt-5 rounded-lg border border-rose-300/30 bg-rose-950/25 px-3 py-2 text-sm leading-6 text-rose-100">{exportError}</p> : null}<button className="mt-8 w-full rounded-lg bg-emerald-300 px-4 py-3 font-mono text-xs font-medium tracking-[0.12em] text-[#081410] transition hover:bg-emerald-200" onClick={exportDiagram} type="button">{text.exportAction}</button></div></div> : null}
 
       <footer className="flex flex-col gap-2 pt-6 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-100/35 sm:flex-row sm:justify-between"><span>{text.footerLeft}</span><span>{text.footerRight}</span></footer>
     </div>
